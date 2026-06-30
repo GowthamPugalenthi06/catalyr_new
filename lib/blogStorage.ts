@@ -3,7 +3,11 @@ import path from "path";
 import type { BlogPost } from "./blogData";
 import { BLOG_POSTS } from "./blogData";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const IS_PROD = process.env.NODE_ENV === "production" || process.env.VERCEL;
+const BUNDLED_DATA_DIR = path.join(process.cwd(), "data");
+const BUNDLED_BLOGS_FILE = path.join(BUNDLED_DATA_DIR, "blogs.json");
+
+const DATA_DIR = IS_PROD ? "/tmp/data" : BUNDLED_DATA_DIR;
 const BLOGS_FILE = path.join(DATA_DIR, "blogs.json");
 
 // ─── Ensure data directory and file exist ─────────────────────────────────────
@@ -18,8 +22,14 @@ async function ensureDataFile(): Promise<void> {
   try {
     await fs.access(BLOGS_FILE);
   } catch {
-    // Seed with initial data from blogData.ts
-    await fs.writeFile(BLOGS_FILE, JSON.stringify(BLOG_POSTS, null, 2), "utf-8");
+    try {
+      // Try to seed with bundled data first
+      const bundledData = await fs.readFile(BUNDLED_BLOGS_FILE, "utf-8");
+      await fs.writeFile(BLOGS_FILE, bundledData, "utf-8");
+    } catch {
+      // Fallback to initial data from blogData.ts
+      await fs.writeFile(BLOGS_FILE, JSON.stringify(BLOG_POSTS, null, 2), "utf-8");
+    }
   }
 }
 
