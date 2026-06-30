@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body { background: #003a99; margin: 0; padding: 20px; color: white; }
+    #map-container { position: relative; display: inline-block; }
+    img { display: block; max-width: 100%; }
+    #coords { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; }
+</style>
+</head>
+<body>
+    <div id="coords">Click on the map to get coordinates</div>
+    <div id="map-container">
+        <!-- We embed the SVG directly or via object to get natural coordinates -->
+        <object data="Frame-2131329712.svg" type="image/svg+xml" id="map" width="1235" height="650"></object>
+    </div>
+    <script>
+        const mapObj = document.getElementById('map');
+        mapObj.addEventListener('load', () => {
+            const svgDoc = mapObj.contentDocument;
+            const svg = svgDoc.querySelector('svg');
+            svg.addEventListener('click', (e) => {
+                // Get click coordinates relative to the SVG viewbox
+                const pt = svg.createSVGPoint();
+                pt.x = e.clientX;
+                pt.y = e.clientY;
+                const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+                
+                const coordText = `X: ${svgP.x.toFixed(1)}, Y: ${svgP.y.toFixed(1)}`;
+                document.getElementById('coords').innerText = coordText;
+                console.log(coordText);
+            });
+        });
+    </script>
+</body>
+</html>
