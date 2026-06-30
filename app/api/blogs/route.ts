@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { readBlogs, createBlog } from "@/lib/blogStorage";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/blogs — List all blogs
 export async function GET() {
   try {

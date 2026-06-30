@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getBlog, updateBlog, deleteBlog } from "@/lib/blogStorage";
 
+export const dynamic = 'force-dynamic';
+
 type Context = {
   params: Promise<{ id: string }>;
 };

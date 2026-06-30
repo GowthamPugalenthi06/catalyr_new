@@ -2,13 +2,30 @@ import fs from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 
-const settingsFilePath = path.join(process.cwd(), 'data', 'settings.json');
+export const dynamic = 'force-dynamic';
+
+const IS_PROD = process.env.NODE_ENV === "production" || process.env.VERCEL;
+const BUNDLED_SETTINGS_FILE = path.join(process.cwd(), 'data', 'settings.json');
+const DATA_DIR = IS_PROD ? "/tmp/data" : path.join(process.cwd(), 'data');
+const settingsFilePath = path.join(DATA_DIR, 'settings.json');
+
+function ensureSettingsFile() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(settingsFilePath)) {
+    try {
+      const bundledData = fs.readFileSync(BUNDLED_SETTINGS_FILE, 'utf8');
+      fs.writeFileSync(settingsFilePath, bundledData, 'utf8');
+    } catch {
+      fs.writeFileSync(settingsFilePath, "{}", 'utf8');
+    }
+  }
+}
 
 export async function GET() {
   try {
-    if (!fs.existsSync(settingsFilePath)) {
-      return NextResponse.json({ error: "Settings not found" }, { status: 404 });
-    }
+    ensureSettingsFile();
     const data = fs.readFileSync(settingsFilePath, 'utf8');
     return NextResponse.json(JSON.parse(data));
   } catch (error) {
@@ -18,6 +35,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    ensureSettingsFile();
     const data = await req.json();
     fs.writeFileSync(settingsFilePath, JSON.stringify(data, null, 2), 'utf8');
     return NextResponse.json({ success: true });
